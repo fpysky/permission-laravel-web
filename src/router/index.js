@@ -124,6 +124,14 @@ export const asyncRouterMap = [
     },
     children: [
       {
+        path: 'adminer',
+        component: () => import('@/views/permission/adminer'),
+        name: 'AdminerPermission',
+        meta: {
+          title: 'AdminerPermission'
+        }
+      },
+      {
         path: 'page',
         component: () => import('@/views/permission/page'),
         name: 'PagePermission',
@@ -141,6 +149,7 @@ export const asyncRouterMap = [
           // if do not set roles, means: this page does not require permission
         }
       }
+
     ]
   },
 

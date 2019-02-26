@@ -4,7 +4,8 @@ export default {
     introduction: '简述',
     documentation: '文档',
     guide: '引导页',
-    permission: '权限测试页',
+    permission: '权限管理',
+    AdminerPermission: '管理员管理',
     pagePermission: '页面权限',
     directivePermission: '指令权限',
     icons: '图标',
@@ -73,13 +74,14 @@ export default {
     size: '布局大小'
   },
   login: {
-    title: '系统登录',
+    title: '***公司**系统登录',
     logIn: '登录',
     username: '账号',
     password: '密码',
     any: '随便填',
     thirdparty: '第三方登录',
-    thirdpartyTips: '本地不能模拟，请结合自己业务进行模拟！！！'
+    thirdpartyTips: '本地不能模拟，请结合自己业务进行模拟！！！',
+    validatePasswordError: '密码不能小于六位数'
   },
   documentation: {
     documentation: '文档',
@@ -113,6 +115,7 @@ export default {
     type: '类型',
     remark: '点评',
     search: '搜索',
+    clear: '清空',
     add: '添加',
     export: '导出',
     reviewer: '审核人',
