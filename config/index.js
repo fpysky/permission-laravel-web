@@ -9,7 +9,16 @@ module.exports = {
     // Paths
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
-    proxyTable: {},
+    proxyTable: {
+      '/api': {
+        target: 'http://permission-laravel.test',
+        changeOrigin: true,
+      },
+      '/storage': {
+        target: 'http://permission-laravel.test',
+        changeOrigin: true,
+      }
+    },
 
     // Various Dev Server settings
 
@@ -42,7 +51,8 @@ module.exports = {
     // (https://github.com/webpack/css-loader#sourcemaps)
     // In our experience, they generally work as expected,
     // just be aware of this issue when enabling this option.
-    cssSourceMap: false
+    cssSourceMap: false,
+    
   },
 
   build: {

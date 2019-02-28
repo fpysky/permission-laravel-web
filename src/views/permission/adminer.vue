@@ -13,13 +13,13 @@
         style="width: 160px;"
         class="filter-item"
         type="date"
-        placeholder="开始日期"/>
+        placeholder="开始日期" />
       <el-date-picker
         v-model="listQuery.etime"
         style="width: 160px;"
         class="filter-item"
         type="date"
-        placeholder="结束日期"/>
+        placeholder="结束日期" />
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
         {{ $t('table.search') }}</el-button>
       <el-button v-waves class="filter-item" plain icon="el-icon-delete" @click="handleClear">
@@ -31,11 +31,11 @@
       highlight-current-row
       style="width: 100%;"
       @sort-change="sortChange">
-      <el-table-column label="ID" prop="id" sortable="custom" align="center" width="90"/>
-      <el-table-column label="账号" prop="account" align="center" width="110"/>
-      <el-table-column label="昵称" prop="nick_name" align="center" width="110"/>
-      <el-table-column label="头像" prop="avatar" align="center" width="110"/>
-      <el-table-column label="简介" prop="introduction" align="center" width="110"/>
+      <el-table-column label="ID" prop="id" sortable="custom" align="center" width="90" />
+      <el-table-column label="账号" prop="account" align="center" width="110" />
+      <el-table-column label="昵称" prop="nick_name" align="center" width="110" />
+      <el-table-column label="头像" prop="avatar" align="center" width="110" />
+      <el-table-column label="简介" prop="introduction" align="center" width="110" />
       <el-table-column
         :label="$t('table.actions')"
         align="center"
@@ -64,19 +64,16 @@
       @pagination="getList" />
     <Modal v-model="addModal" width="400">
       <p slot="header" style="text-align:center"><span>添加管理员</span></p>
-      <el-form
-        ref="ruleForm"
-        :model="ruleForm"
-        :rules="rules"
-        label-width="70px">
-        <el-form-item label="账号：" prop="account">
-          <el-input v-model="ruleForm.account" placeholder="账号"/>
+      <el-form ref="ruleForm" :model="ruleForm" :rules="rules" label-width="70px">
+        <el-form-item :class="(submitErrors.length != 0 && submitErrors.account)?'is-error':''" label="账号：" prop="account">
+          <el-input v-model="ruleForm.account" placeholder="账号" />
+          <div v-if="submitErrors.length != 0 && submitErrors.account" class="el-form-item__error">{{ submitErrors.account[0] }}</div>
         </el-form-item>
         <el-form-item label="密码：" prop="password">
-          <el-input v-model="ruleForm.password" type="password" placeholder="密码"/>
+          <el-input v-model="ruleForm.password" type="password" placeholder="密码" />
         </el-form-item>
         <el-form-item label="昵称：" prop="nick_name">
-          <el-input v-model="ruleForm.nick_name" placeholder="昵称"/>
+          <el-input v-model="ruleForm.nick_name" placeholder="昵称" />
         </el-form-item>
         <el-form-item label="头像：" prop="avatar">
           <el-upload
@@ -87,7 +84,7 @@
             :on-success="handleAvatarSuccess"
             :before-upload="beforeAvatarUpload"
             class="avatar-uploader">
-            <img v-if="imageUrl" :src="imageUrl" class="avatar">
+            <img v-if="ruleForm.avatar" :src="ruleForm.avatar" class="avatar">
             <i v-else class="el-icon-plus avatar-uploader-icon"/>
           </el-upload>
         </el-form-item>
@@ -96,16 +93,18 @@
             :autosize="{ minRows: 2, maxRows: 4}"
             v-model="ruleForm.introduction"
             type="textarea"
-            placeholder="简介"/>
+            placeholder="简介" />
         </el-form-item>
         <el-form-item label="角色：" prop="roles">
           <el-checkbox-group v-loading="rolesLoading" v-model="ruleForm.roles">
-            <el-checkbox v-for="(role,index) in roles" :label="role.id" name="type">{{ role.name }}</el-checkbox>
+            <el-checkbox v-for="(role,index) in roles" :label="role.id" name="type">{{ role.name }}
+            </el-checkbox>
           </el-checkbox-group>
         </el-form-item>
       </el-form>
       <div slot="footer">
-        <el-button :loading="submitLoading" style="width:100%;" type="primary" @click="submitForm" v-text="submitLoading?'提交中':'提交'"/>
+        <el-button :loading="submitLoading" style="width:100%;" type="primary" @click="submitForm">
+          {{ submitLoading ? '提交中': '提交' }}</el-button>
       </div>
     </Modal>
   </div>
@@ -144,12 +143,12 @@ export default {
       rules: {
 
       },
-      imageUrl: '',
-      uploadHeadImageUrl: process.env.BASE_API + '/api/uploadHeadImage',
+      uploadHeadImageUrl: '/api/uploadHeadImage',
       uploadHeadImageHeaders: { 'Authorization': 'Bearer ' + getToken() },
       roles: [],
       rolesLoading: false,
-      submitLoading: false
+      submitLoading: false,
+      submitErrors: []
     }
   },
   created() {
@@ -173,6 +172,15 @@ export default {
     add() {
       this.addModal = true
       this.getAllRole()
+      this.submitErrors = []
+      this.ruleForm = {
+        account: '',
+        nick_name: '',
+        introduction: '',
+        avatar: '',
+        roles: [],
+        password: ''
+      }
     },
     handleFilter() {
       this.listQuery.page = 1
@@ -205,7 +213,6 @@ export default {
     },
     handleAvatarSuccess(res, file) {
       this.ruleForm.avatar = res.path
-      this.imageUrl = URL.createObjectURL(file.raw)
     },
     beforeAvatarUpload(file) {
       const isJPG = file.type === 'image/jpeg'
@@ -228,8 +235,9 @@ export default {
             if (res.data.code == 0) {
               this.$message.success('操作成功')
               this.addModal = false
+              this.getList()
             } else if (res.data.code == 422) {
-
+              this.submitErrors = res.data.err
             } else {
               this.$message.warning(res.data.msg)
             }
@@ -275,12 +283,13 @@ export default {
     }
 </style>
 <style scoped>
-    .el-checkbox{
-        margin-left:12px;
+    .el-checkbox {
+        margin-left: 12px;
         width: 130px;
         overflow: hidden;
     }
-    .el-checkbox:first-child{
-        margin-left:12px;
+
+    .el-checkbox:first-child {
+        margin-left: 12px;
     }
 </style>
