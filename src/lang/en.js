@@ -6,6 +6,7 @@ export default {
     guide: 'Guide',
     permission: 'Permission',
     AdminerPermission: 'Adminer Permission',
+    RolePermission: 'Role Permission',
     pagePermission: 'Page Permission',
     directivePermission: 'Directive Permission',
     icons: 'Icons',

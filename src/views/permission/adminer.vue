@@ -2,10 +2,9 @@
   <div class="app-container">
     <div class="filter-container">
       <el-button class="filter-item" plain icon="el-icon-plus" @click="add">{{ $t('table.add') }}</el-button>
-      <el-input :placeholder="$t('table.title')" v-model="query.keyword" style="width: 160px;" class="filter-item"
-        @keyup.enter.native="getData" />
-      <el-date-picker v-model="query.stime" style="width: 160px;" class="filter-item" type="date" placeholder="开始日期" />
-      <el-date-picker v-model="query.etime" style="width: 160px;" class="filter-item" type="date" placeholder="结束日期" />
+      <el-input placeholder="搜索点什么" v-model="query.keyword" style="width: 160px;" class="filter-item" @keyup.enter.native="getData" />
+      <el-date-picker v-model="query.stime" style="width: 160px;" class="filter-item" value-format="yyyy-MM-dd" type="date" placeholder="开始日期" />
+      <el-date-picker v-model="query.etime" style="width: 160px;" class="filter-item" value-format="yyyy-MM-dd" type="date" placeholder="结束日期" />
       <el-button v-waves class="filter-item" type="primary" :loading="tableLoading" icon="el-icon-search"
         @click="getData">
         {{ $t('table.search') }}</el-button>
@@ -14,7 +13,7 @@
     </div>
 
     <el-table v-loading="tableLoading" :data="list" highlight-current-row style="width: 100%;"
-      @sort-change="sortChange">
+      @sort-change="sortChange" @row-dblclick="edit">
       <el-table-column label="ID" prop="id" sortable="custom" align="center" width="90" />
       <el-table-column label="账号" prop="account" align="center" width="200" />
       <el-table-column label="昵称" prop="nick_name" align="center" width="200" />
@@ -24,15 +23,16 @@
         </template>
       </el-table-column>
       <el-table-column label="简介" prop="introduction" align="center" />
+      <el-table-column label="创建时间" prop="created_at" align="center" />
+      <el-table-column label="更新时间" prop="updated_at" align="center" />
       <el-table-column :label="$t('table.actions')" align="center" width="230" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button type="primary" size="mini" @click="edit(scope.row)">{{ $t('table.edit') }}
           </el-button>
           <el-popover placement="top" width="160" v-model="scope.row.deletePopover">
             <p style="text-align:center;padding:3px 0;"><i class="el-icon-warning"></i> 确定要删除吗？</p>
-            <div style="text-align: right; margin: 0">
-              <el-button size="mini" @click="scope.row.deletePopover = false">取消</el-button>
-              <el-button type="danger" size="mini" @click="deleteAdminer(scope.$index)">确定</el-button>
+            <div style="text-align: center; margin: 0">
+              <el-button type="danger" size="mini" @click="deleteFunc(scope.$index)">确定</el-button>
             </div>
             <el-button slot="reference" size="mini" type="danger">{{ $t('table.delete') }}
             </el-button>
@@ -40,6 +40,7 @@
         </template>
       </el-table-column>
     </el-table>
+
     <pagination v-show="total>0" :total="total" :page.sync="query.page" :limit.sync="query.limit"
       @pagination="getData" />
     <Modal v-model="addModal" width="400">
@@ -78,9 +79,8 @@
         </el-form-item>
       </el-form>
       <div slot="footer">
-        <el-button :loading="submitLoading" style="width:76%;" type="primary" @click="submitForm">
-          {{ submitLoading ? '提交中': '提交' }}</el-button>
-        <el-button @click="resetForm('ruleForm')" icon="el-icon-refresh">重置</el-button>
+        <el-button :loading="submitLoading" style="width:76%;" type="primary" @click="submitForm">{{ submitLoading ? '提交中': '提交' }}</el-button>
+        <el-button @click="resetData" icon="el-icon-refresh">重置</el-button>
       </div>
     </Modal>
   </div>
@@ -102,7 +102,8 @@
           stime: '',
           etime: '',
           page: 1,
-          limit: 20
+          limit: 20,
+          sort:[],
         },
         tableLoading: false,
         list: [],
@@ -146,10 +147,6 @@
       this.getData()
     },
     methods: {
-      resetForm() {
-        this.submitErrors = {}
-        this.$refs['ruleForm'].resetFields();
-      },
       inputChange(val) {
         if (this.submitErrors[val] && this.ruleForm[val] != this.oldRuleForm[val]) delete this.submitErrors[val]
       },
@@ -167,11 +164,39 @@
           this.$message.error('服务器或网络错误')
         })
       },
+      resetData(){
+        this.ruleForm.id = 0
+        this.$refs['ruleForm'].resetFields()
+        this.submitErrors = {}
+      },
       add() {
         this.addModal = true
+        this.isEdit = false
+        this.resetData()
         this.getAllRole()
-        this.submitErrors = {}
-        this.$refs['ruleForm'].resetFields()
+      },
+      edit(row) {
+        this.resetData()
+        this.getAdminerRoles(row.id)
+        this.getAllRole()
+        this.isEdit = true
+        this.addModal = true
+        this.ruleForm.id = row.id
+        this.ruleForm.account = row.account
+        this.ruleForm.nick_name = row.nick_name
+        this.ruleForm.introduction = row.introduction
+        this.ruleForm.avatar = row.avatar
+      },
+      getAdminerRoles(id) {
+        getAdminerRoles(id).then(res => {
+          if (res.data.code == 0) {
+            this.ruleForm.roles = res.data.list
+          } else {
+            this.$message.warning(res.data.msg)
+          }
+        }).catch(err => {
+          this.$message.warning('服务器或网络错误')
+        })
       },
       getData() {
         this.tableLoading = true
@@ -189,9 +214,8 @@
         this.query.keyword = ''
         this.query.stime = ''
         this.query.etime = ''
-        this.query.page = 1
       },
-      deleteAdminer(k) {
+      deleteFunc(k) {
         deleteAdminer(this.list[k].id).then(res => {
           if (res.data.code == 0) {
             this.$message.success('操作成功')
@@ -205,49 +229,36 @@
         })
       },
       sortChange(data) {
-        const { prop, order } = data
-        if (prop === 'id') {
-          this.sortByID(order)
+        let order = ''
+        if (data.order === 'ascending') {
+          order = 'asc'
+        }else{
+          order = 'desc'
         }
-      },
-      edit(row) {
-        this.isEdit = true
-        this.addModal = true
-        this.getAllRole()
-        delete row.created_at
-        delete row.updated_at
-        this.ruleForm.id = row.id
-        this.ruleForm.account = row.account
-        this.ruleForm.nick_name = row.nick_name
-        this.ruleForm.introduction = row.introduction
-        this.ruleForm.avatar = row.avatar
-        this.getAdminerRoles(row.id)
-      },
-      getAdminerRoles(id) {
-        getAdminerRoles(id).then(res => {
-          if (res.data.code == 0) {
-            this.ruleForm.roles = res.data.list
-          } else {
-            this.$message.warning(res.data.msg)
-          }
-        }).catch(err => {
-          this.$message.warning('服务器或网络错误')
-        })
+        if(this.query.sort.length){
+          this.query.sort.forEach(item => {
+            if(item.field == data.prop){
+              if(item.order != order){
+                item.order = order
+              }
+            }else{
+              this.query.sort.push({field:data.prop,order:order})
+            }
+          })
+        }else{
+          this.query.sort.push({field:data.prop,order:order})
+        }
+        this.getData()
       },
       handleAvatarSuccess(res, file) {
         this.ruleForm.avatar = res.path
       },
       beforeAvatarUpload(file) {
-        const isJPG = file.type === 'image/jpeg'
         const isLt2M = file.size / 1024 / 1024 < 2
-
-        if (!isJPG) {
-          this.$message.error('上传头像图片只能是 JPG 格式!')
-        }
         if (!isLt2M) {
           this.$message.error('上传头像图片大小不能超过 2MB!')
         }
-        return isJPG && isLt2M
+        return isLt2M
       },
       submitForm() {
         this.$refs['ruleForm'].validate((valid) => {
@@ -267,7 +278,6 @@
                   this.$message.warning(res.data.msg)
                 }
               }).catch(err => {
-                console.log(err, 'err')
                 this.submitLoading = false
                 this.$message.error('服务器或网络错误')
               })
@@ -285,7 +295,6 @@
                   this.$message.warning(res.data.msg)
                 }
               }).catch(err => {
-                console.log(err, 'err')
                 this.submitLoading = false
                 this.$message.error('服务器或网络错误')
               })

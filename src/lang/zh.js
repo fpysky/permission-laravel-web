@@ -6,6 +6,7 @@ export default {
     guide: '引导页',
     permission: '权限管理',
     AdminerPermission: '管理员管理',
+    RolePermission: '角色管理',
     pagePermission: '页面权限',
     directivePermission: '指令权限',
     icons: '图标',

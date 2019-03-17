@@ -128,7 +128,17 @@ export const asyncRouterMap = [
         component: () => import('@/views/permission/adminer'),
         name: 'AdminerPermission',
         meta: {
-          title: 'AdminerPermission'
+          title: 'AdminerPermission',
+          icon: 'user'
+        }
+      },
+      {
+        path: 'role',
+        component: () => import('@/views/permission/role'),
+        name: 'RolePermission',
+        meta: {
+          title: 'RolePermission',
+          icon: 'peoples'
         }
       },
       {
