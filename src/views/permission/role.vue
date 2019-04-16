@@ -57,7 +57,7 @@
                     <template v-for="(permission,index) in permissions">
                         <el-checkbox v-model="permission.checked" :indeterminate="permission.isIndeterminate" @change="((val)=>{handleCheckAllChange(val, index)})" :label="permission.id">{{ permission.name }}</el-checkbox>
                         <div style="margin: 15px 0;"></div>
-                        <el-checkbox-group v-loading="permissionsLoading" v-model="ruleForm.permissions" @change="((val)=>{handleCheckedChildrenChange(val, index)}) ">
+                        <el-checkbox-group style="padding:0 0 0 20px;border:1px solid #cccccc;border-radius: 3px;" v-loading="permissionsLoading" v-model="ruleForm.permissions" @change="((val)=>{handleCheckedChildrenChange(val, index)}) ">
                             <el-checkbox v-for="(permissionChildren,childIndex) in permission.children" :label="permissionChildren.id" name="type">{{ permissionChildren.name }}
                             </el-checkbox>
                             <div v-if="submitErrors.permissions" class="el-form-item__error">{{ submitErrors.permissions[0] }}</div>
@@ -132,9 +132,9 @@
         methods: {
             handleCheckAllChange(val,index) {
                 if(val){
-                    this.ruleForm.permissions.push(this.permissions[index].id)
+                    if(this.ruleForm.permissions.indexOf(this.permissions[index].id) === -1) this.ruleForm.permissions.push(this.permissions[index].id)
                     this.permissions[index].children.forEach(item => {
-                        this.ruleForm.permissions.push(item.id)
+                        if(this.ruleForm.permissions.indexOf(item.id) === -1) this.ruleForm.permissions.push(item.id)
                     })
                 }else{
                     let pIndex = this.ruleForm.permissions.indexOf(this.permissions[index].id)
@@ -146,20 +146,32 @@
                         this.ruleForm.permissions.splice(cIndex,1)
                     })
                 }
-                this.isIndeterminate = false
+                this.permissions[index].isIndeterminate = false
             },
             handleCheckedChildrenChange(val,index){
+                this.$forceUpdate()
                 this.ruleForm.permissions = val
-                if(val.length <= 0){
+                
+                if(val.length == 0){
                     this.permissions[index].isIndeterminate = false
                 }else{
                     let isIndeterminate = false
                     this.permissions[index].children.forEach(item => {
-                        if(val.indexOf(item.id) !== -1) isIndeterminate = true
+                        if(val.indexOf(item.id) !== -1){
+                            isIndeterminate = true
+                            
+                        }
                     })
+                    if(isIndeterminate){
+                        if(this.ruleForm.permissions.indexOf(this.permissions[index].id) === -1){
+                            this.ruleForm.permissions.push(this.permissions[index].id)
+                        }
+                    }else{
+                        this.ruleForm.permissions.splice(this.ruleForm.permissions.indexOf(this.permissions[index].id),1)
+                        this.permissions[index].checked = false
+                    }
                     this.permissions[index].isIndeterminate = isIndeterminate
                 }
-                console.log(this.permissions,'this.permissions')
             },
             inputChange(val) {
                 if (this.submitErrors[val] && this.ruleForm[val] != this.oldRuleForm[val]) delete this.submitErrors[val]
@@ -183,7 +195,7 @@
                         this.permissions = res.data.list
                         this.permissions.forEach(item => {
                             item.checked = false
-                            item.isIndeterminate = true
+                            item.isIndeterminate = false
                         })
                     } else {
                         this.$message.warning(res.data.msg)
@@ -260,6 +272,8 @@
             submitForm() {
                 this.$refs['ruleForm'].validate((valid) => {
                     if (valid) {
+                        console.log(this.ruleForm,'this.ruleForm')
+                        return
                         this.submitLoading = true
                         if (this.ruleForm.id == 0) {
                             roles(this.ruleForm).then(res => {

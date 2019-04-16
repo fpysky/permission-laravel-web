@@ -23,8 +23,8 @@
         </template>
       </el-table-column>
       <el-table-column label="简介" prop="introduction" align="center" />
-      <el-table-column label="创建时间" prop="created_at" align="center" />
-      <el-table-column label="更新时间" prop="updated_at" align="center" />
+      <el-table-column label="创建时间" prop="created_at" align="center" width="140"/>
+      <el-table-column label="更新时间" prop="updated_at" align="center" width="140"/>
       <el-table-column :label="$t('table.actions')" align="center" width="230" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button type="primary" size="mini" @click="edit(scope.row)">{{ $t('table.edit') }}

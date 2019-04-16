@@ -75,7 +75,7 @@ export default {
     size: '布局大小'
   },
   login: {
-    title: '***公司**系统登录',
+    title: '我房办公',
     logIn: '登录',
     username: '账号',
     password: '密码',
